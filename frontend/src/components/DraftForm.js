@@ -1,16 +1,47 @@
 import React, { useState, useEffect } from 'react';
 import '../App.css';
+import { 
+  getMainCategories, 
+  getSubcategories, 
+  getTypes,
+  formatCaseType,
+  getSimplifiedCaseType 
+} from '../utils/caseTypesConfig';
 
 const DraftForm = ({ onGenerateDraft, isLoading, templateData }) => {
-  const [caseType, setCaseType] = useState('Civil');
+  const [mainCategory, setMainCategory] = useState('');
+  const [subcategory, setSubcategory] = useState('');
+  const [specificType, setSpecificType] = useState('');
   const [details, setDetails] = useState('');
-  const [jurisdiction, setJurisdiction] = useState('');
+  const [jurisdiction, setJurisdiction] = useState('Karnataka, India');
   const [error, setError] = useState('');
+
+  const mainCategories = getMainCategories();
+  const subcategories = mainCategory ? getSubcategories(mainCategory) : [];
+  const specificTypes = subcategory ? getTypes(mainCategory, subcategory) : [];
 
   // Load template data when provided
   useEffect(() => {
     if (templateData) {
-      setCaseType(templateData.category);
+      // Parse template category if it's in new format, otherwise use it as main category
+      if (templateData.category.includes(' → ')) {
+        const parts = templateData.category.split(' → ');
+        setMainCategory(parts[0]?.trim() || 'Civil Law');
+        setSubcategory(parts[1]?.trim() || '');
+        setSpecificType(parts[2]?.trim() || '');
+      } else {
+        // Old format - map to new structure
+        const categoryMap = {
+          'Civil': 'Civil Law',
+          'Criminal': 'Criminal Law',
+          'Contract': 'Civil Law',
+          'Family': 'Family Law',
+          'Property': 'Property Law',
+          'Employment': 'Employment Law'
+        };
+        setMainCategory(categoryMap[templateData.category] || 'Civil Law');
+      }
+      
       setDetails(`Template: ${templateData.title}\n\n${templateData.description}\n\nPlease provide your case details below:\n`);
     }
   }, [templateData]);
@@ -19,12 +50,23 @@ const DraftForm = ({ onGenerateDraft, isLoading, templateData }) => {
     e.preventDefault();
     setError('');
 
-    if (!caseType || !details.trim()) {
-      setError('Please fill in all required fields');
+    if (!mainCategory || !subcategory || !specificType || !details.trim()) {
+      setError('Please complete all required fields');
       return;
     }
 
-    onGenerateDraft({ caseType, details, jurisdiction });
+    const formattedCaseType = formatCaseType(mainCategory, subcategory, specificType);
+    const simplifiedType = getSimplifiedCaseType(mainCategory);
+
+    onGenerateDraft({ 
+      caseType: formattedCaseType, // Full hierarchical path
+      mainCategory,
+      subcategory,
+      specificType,
+      simplifiedCaseType: simplifiedType, // For AI prompts
+      details, 
+      jurisdiction 
+    });
   };
 
   return (
@@ -37,22 +79,71 @@ const DraftForm = ({ onGenerateDraft, isLoading, templateData }) => {
 
       <div>
         <label className="block text-sm font-medium text-slate-300 mb-2">
-          Case Type <span className="text-red-400">*</span>
+          Legal Category <span className="text-red-400">*</span>
         </label>
         <select
-          value={caseType}
-          onChange={(e) => setCaseType(e.target.value)}
+          value={mainCategory}
+          onChange={(e) => {
+            setMainCategory(e.target.value);
+            setSubcategory('');
+            setSpecificType('');
+          }}
           className="input-field bg-slate-800"
           disabled={isLoading}
         >
-          <option value="Civil">Civil Case</option>
-          <option value="Criminal">Criminal Case</option>
-          <option value="Contract">Contract</option>
-          <option value="Family">Family Law</option>
-          <option value="Property">Property Dispute</option>
-          <option value="Employment">Employment</option>
+          <option value="">Select a Category</option>
+          {mainCategories.map((cat) => (
+            <option key={cat} value={cat}>
+              {cat}
+            </option>
+          ))}
         </select>
       </div>
+
+      {mainCategory && (
+        <div>
+          <label className="block text-sm font-medium text-slate-300 mb-2">
+            Subcategory <span className="text-red-400">*</span>
+          </label>
+          <select
+            value={subcategory}
+            onChange={(e) => {
+              setSubcategory(e.target.value);
+              setSpecificType('');
+            }}
+            className="input-field bg-slate-800"
+            disabled={isLoading}
+          >
+            <option value="">Select a Subcategory</option>
+            {subcategories.map((subcat) => (
+              <option key={subcat} value={subcat}>
+                {subcat}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
+
+      {subcategory && (
+        <div>
+          <label className="block text-sm font-medium text-slate-300 mb-2">
+            Case Type <span className="text-red-400">*</span>
+          </label>
+          <select
+            value={specificType}
+            onChange={(e) => setSpecificType(e.target.value)}
+            className="input-field bg-slate-800"
+            disabled={isLoading}
+          >
+            <option value="">Select Case Type</option>
+            {specificTypes.map((type) => (
+              <option key={type} value={type}>
+                {type}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
 
       <div>
         <label className="block text-sm font-medium text-slate-300 mb-2">
@@ -76,14 +167,14 @@ const DraftForm = ({ onGenerateDraft, isLoading, templateData }) => {
           value={jurisdiction}
           onChange={(e) => setJurisdiction(e.target.value)}
           className="input-field bg-slate-800"
-          placeholder="e.g., California, India, UK"
+          placeholder="e.g., Karnataka, India"
           disabled={isLoading}
         />
       </div>
 
       <button
         type="submit"
-        disabled={isLoading}
+        disabled={isLoading || !mainCategory || !subcategory || !specificType}
         className="btn-primary w-full flex items-center justify-center gap-2"
       >
         {isLoading ? (

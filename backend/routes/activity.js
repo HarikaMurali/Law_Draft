@@ -50,6 +50,44 @@ router.get('/history', auth, async (req, res) => {
   }
 });
 
+// Fetch resume payload for a specific activity
+router.get('/resume/:activityId', auth, async (req, res) => {
+  try {
+    const activity = await Activity.findOne({
+      _id: req.params.activityId,
+      userId: req.user.userId
+    }).lean();
+
+    if (!activity) {
+      return res.status(404).json({ success: false, error: 'Activity not found' });
+    }
+
+    const resumeType = activity.metadata?.resumeType;
+    const resumePayload = activity.metadata?.resumePayload;
+
+    if (!resumeType || !resumePayload) {
+      return res.status(400).json({
+        success: false,
+        error: 'No resumable data stored for this activity'
+      });
+    }
+
+    res.json({
+      success: true,
+      activityId: activity._id,
+      action: activity.action,
+      title: activity.title,
+      details: activity.details,
+      draftId: activity.draftId || null,
+      resumeType,
+      resumePayload
+    });
+  } catch (error) {
+    console.error('Resume fetch error:', error);
+    res.status(500).json({ success: false, error: 'Failed to load resume data' });
+  }
+});
+
 // Get activity statistics
 router.get('/stats', auth, async (req, res) => {
   try {

@@ -4,6 +4,7 @@ const Draft = require('../models/Draft');
 const Activity = require('../models/Activity');
 const auth = require('../middleware/auth');
 const { generateContent, PRIMARY_MODEL } = require('../utils/gemini');
+const { formatCaseType, getSimplifiedCaseType } = require('../config/caseTypesConfig');
 
 // Mock draft generator (fallback when API is unavailable)
 const generateMockDraft = (caseType, details, jurisdiction) => {
@@ -35,19 +36,7 @@ III. LEGAL ISSUES
    3. What remedies are available to the aggrieved party
    4. The quantum of damages, if any
 
-IV. LEGAL PROVISIONS & CITATIONS
-   The following laws and provisions are applicable to this case:
-   
-   For ${jurisdiction || 'the applicable jurisdiction'}:
-   - Relevant Statutes and Acts
-   - Common Law Principles
-   - Established Precedents
-   - Applicable Regulations
-   
-   The court shall apply these provisions in interpreting the rights 
-   and obligations of the parties.
-
-V. PRAYERS/RELIEF SOUGHT
+IV. PRAYERS/RELIEF SOUGHT
    The petitioner/plaintiff respectfully prays before this Hon'ble Court for:
    
    1. To declare the rights and obligations of the parties
@@ -56,14 +45,16 @@ V. PRAYERS/RELIEF SOUGHT
    4. To grant such other relief as deemed just and proper
    5. To award costs of this proceeding
 
-VI. CONCLUSION
-   Based on the facts presented, applicable law, and legal precedents,
-   the relief sought is justified and in the interest of justice.
+V. APPLICABLE LAWS & SECTIONS
+   The following laws and provisions are applicable to this case:
+   For ${jurisdiction || 'the applicable jurisdiction'}:
+   - Relevant Statutes and Acts
+   - Common Law Principles
+   - Established Precedents
+   - Applicable Regulations
    
-   This draft has been prepared to assist in understanding the legal
-   position and to serve as a basis for further legal proceedings.
-   
-   It is submitted for consideration of the Hon'ble Court.
+   The court shall apply these provisions in interpreting the rights 
+   and obligations of the parties.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
@@ -78,24 +69,48 @@ Draft Type: ${caseType}`;
 // Generate full draft with REAL AI
 router.post('/', auth, async (req, res) => {
   try {
-    const { caseType, details, jurisdiction } = req.body;
+    const { 
+      caseType, 
+      details, 
+      jurisdiction,
+      mainCategory,
+      subcategory,
+      specificType,
+      simplifiedCaseType
+    } = req.body;
+
+    // Accept either old format (caseType) or new format
+    let finalCaseType = caseType;
+    let finalSimplifiedType = simplifiedCaseType;
+    let storedMainCategory = mainCategory;
+    let storedSubcategory = subcategory;
+    let storedSpecificType = specificType;
+
+    if (!finalCaseType) {
+      if (mainCategory && subcategory && specificType) {
+        finalCaseType = formatCaseType(mainCategory, subcategory, specificType);
+        finalSimplifiedType = getSimplifiedCaseType(mainCategory);
+      } else {
+        return res.status(400).json({ error: 'Valid case type is required' });
+      }
+    }
 
     // Enhanced input validation
-    if (!caseType || typeof caseType !== 'string') {
+    if (!finalCaseType || typeof finalCaseType !== 'string') {
       return res.status(400).json({ error: 'Valid case type is required' });
     }
     if (!details || typeof details !== 'string' || details.trim().length < 10) {
       return res.status(400).json({ error: 'Please provide sufficient case details (minimum 10 characters)' });
     }
 
-    console.log(`Generating draft using Gemini AI for case type: ${caseType}`);
+    console.log(`Generating draft using Gemini AI for case type: ${finalCaseType}`);
 
     try {
       // Use Gemini AI for real draft generation
-      const prompt = `You are an expert legal assistant specializing in ${jurisdiction || 'general'} law. Generate a comprehensive, professional legal draft document for the following case:
+      const prompt = `You are an expert legal assistant specializing in ${jurisdiction || 'Karnataka, India'} law. Generate a comprehensive, professional legal draft document for the following case:
 
-Case Type: ${caseType}
-Jurisdiction: ${jurisdiction || 'General'}
+Case Type: ${finalSimplifiedType || finalCaseType}
+Jurisdiction: ${jurisdiction || 'Karnataka, India'}
 Case Details: ${details}
 
 Generate a complete legal draft following this structure:
@@ -103,12 +118,11 @@ Generate a complete legal draft following this structure:
 2. Parties Involved (identify from case details)
 3. Factual Background (detailed summary of the case)
 4. Legal Issues (identify key legal questions)
-5. Applicable Laws and Legal Provisions (cite relevant statutes, acts, case law)
-6. Legal Arguments and Analysis
-7. Prayers/Relief Sought (specific remedies requested)
-8. Conclusion and Submission
+5. Prayers/Relief Sought (specific remedies requested)
+6. Applicable Laws and Legal Provisions (cite relevant statutes, acts, case law) - AT THE END
+7. Legal Arguments and Analysis
 
-Use formal legal language, proper legal citation format, and professional structure. The draft should be ready for review by a legal professional. Include appropriate legal terminology and formatting for ${jurisdiction || 'general'} jurisdiction.`;
+Use formal legal language, proper legal citation format, and professional structure. The draft should be ready for review by a legal professional. Include appropriate legal terminology and formatting for ${jurisdiction || 'Karnataka, India'} jurisdiction.`;
 
       const draftText = await generateContent(prompt);
 
@@ -120,10 +134,16 @@ Use formal legal language, proper legal citation format, and professional struct
           await Activity.create({
             userId: req.user.userId,
             action: 'Generated Draft',
-            title: `${caseType} Draft`,
-            type: caseType,
+            title: `${finalCaseType} Draft`,
+            type: finalCaseType,
             details: `Generated AI-powered legal draft using Gemini AI`,
-            metadata: { jurisdiction, aiGenerated: true }
+            metadata: { 
+              jurisdiction, 
+              aiGenerated: true,
+              mainCategory: storedMainCategory,
+              subcategory: storedSubcategory,
+              specificType: storedSpecificType
+            }
           });
         } catch (actErr) {
           console.error('Activity logging error:', actErr.message);
@@ -135,8 +155,8 @@ Use formal legal language, proper legal citation format, and professional struct
         metadata: {
           model: PRIMARY_MODEL,
           aiGenerated: true,
-          caseType,
-          jurisdiction: jurisdiction || 'General',
+          caseType: finalCaseType,
+          jurisdiction: jurisdiction || 'Karnataka, India',
           timestamp: new Date().toISOString()
         }
       });
@@ -145,15 +165,15 @@ Use formal legal language, proper legal citation format, and professional struct
       console.error('Gemini API error, falling back to mock:', aiError.message);
       
       // Fallback to mock if AI fails
-      const draftText = generateMockDraft(caseType, details, jurisdiction);
+      const draftText = generateMockDraft(finalCaseType, details, jurisdiction);
 
       res.json({
         draft: draftText,
         metadata: {
           model: "fallback-mock",
           aiGenerated: false,
-          caseType,
-          jurisdiction: jurisdiction || 'default',
+          caseType: finalCaseType,
+          jurisdiction: jurisdiction || 'Karnataka, India',
           timestamp: new Date().toISOString(),
           note: "AI service temporarily unavailable, using template"
         }

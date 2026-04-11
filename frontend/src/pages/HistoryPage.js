@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Layout from '../components/Layout';
 import axios from '../utils/axios';
 import { formatDate as sharedFormatDate } from '../utils/dateFormat';
 import '../App.css';
 
 const HistoryPage = () => {
+  const navigate = useNavigate();
   const [activities, setActivities] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filterAction, setFilterAction] = useState('all');
@@ -16,6 +18,7 @@ const HistoryPage = () => {
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [activeTab, setActiveTab] = useState('search'); // 'search', 'filters', 'date'
+  const [resumeLoadingId, setResumeLoadingId] = useState(null);
 
   useEffect(() => {
     fetchHistory();
@@ -70,24 +73,6 @@ const HistoryPage = () => {
     return iconMap[action] || '📌';
   };
 
-  const getActionColor = (action) => {
-    const colorMap = {
-      'Generated Draft': 'text-purple-400',
-      'Edited Draft': 'text-blue-400',
-      'Deleted Draft': 'text-red-400',
-      'Downloaded Draft': 'text-cyan-400',
-      'Proofreading': 'text-yellow-400',
-      'Clause Suggestion': 'text-pink-400',
-      'Case Law Search': 'text-green-400',
-      'Statute Search': 'text-orange-400',
-      'Dictionary Lookup': 'text-indigo-400',
-      'Template Used': 'text-amber-400',
-      'Login': 'text-slate-400',
-      'Registered': 'text-emerald-400'
-    };
-    return colorMap[action] || 'text-slate-300';
-  };
-
   const getFilteredActivities = () => {
     let filtered = activities;
 
@@ -102,6 +87,147 @@ const HistoryPage = () => {
     }
 
     return filtered;
+  };
+
+  const resumableActions = new Set([
+    'Case Law Search',
+    'Statute Search',
+    'Dictionary Lookup',
+    'Proofreading',
+    'Clause Suggestion'
+  ]);
+
+  const fallbackResumeNavigation = async (activity) => {
+    const action = activity.action;
+
+    if (action === 'Case Law Search' || action === 'Statute Search' || action === 'Dictionary Lookup') {
+      const searchQuery = activity.metadata?.query || activity.metadata?.searchQuery || activity.metadata?.term || activity.title?.replace(/^Searched: |^Looked up: /, '');
+      const tab = action === 'Case Law Search' ? 'caseLaw' : action === 'Statute Search' ? 'statutes' : 'dictionary';
+      localStorage.setItem('researchData', JSON.stringify({
+        tab,
+        query: searchQuery,
+        resumeResults: activity.metadata?.results || activity.metadata?.topResults || null,
+        resumedAt: new Date().toISOString()
+      }));
+      navigate('/research');
+      return true;
+    }
+
+    if (action === 'Proofreading' || action === 'Clause Suggestion') {
+      if (activity.draftId) {
+        try {
+          const token = localStorage.getItem('token');
+          const response = await axios.get(`/api/drafts/${activity.draftId}`, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          if (response.data) {
+            localStorage.setItem('editDraft', JSON.stringify(response.data));
+          }
+        } catch (error) {
+          console.error('Failed to fetch draft:', error);
+        }
+      }
+      navigate('/dashboard');
+      return true;
+    }
+
+    return false;
+  };
+
+  const resumeActivity = async (activity) => {
+    if (!activity?._id) return false;
+    setResumeLoadingId(activity._id);
+    try {
+      const response = await axios.get(`/api/activity/resume/${activity._id}`);
+      const { resumeType, resumePayload } = response.data || {};
+
+      if (!resumeType || !resumePayload) {
+        throw new Error('No resume data');
+      }
+
+      if (resumeType.startsWith('research')) {
+        localStorage.setItem('researchData', JSON.stringify({
+          tab: resumePayload.tab || 'caseLaw',
+          query: resumePayload.query || '',
+          resumeResults: resumePayload.results || [],
+          resumedAt: resumePayload.timestamp || new Date().toISOString()
+        }));
+        navigate('/research');
+        return true;
+      }
+
+      if (resumeType === 'proofread') {
+        localStorage.setItem('resumeProofread', JSON.stringify(resumePayload));
+        navigate('/dashboard');
+        return true;
+      }
+
+      if (resumeType === 'clause-suggestion') {
+        localStorage.setItem('resumeClauses', JSON.stringify(resumePayload));
+        navigate('/dashboard');
+        return true;
+      }
+
+      throw new Error('Unsupported resume type');
+    } catch (error) {
+      console.error('Failed to resume activity:', error);
+      throw error;
+    } finally {
+      setResumeLoadingId(null);
+    }
+  };
+
+  const handleActivityClick = async (activity) => {
+    const action = activity.action;
+
+    if (resumableActions.has(action)) {
+      try {
+        const resumed = await resumeActivity(activity);
+        if (resumed) return;
+      } catch (error) {
+        const handled = await fallbackResumeNavigation(activity);
+        if (handled) return;
+        alert('Unable to load saved data. Please try again.');
+        return;
+      }
+      return;
+    }
+    
+    // Research activities - redirect to Research page with query
+    // Draft activities - redirect to drafts page or dashboard
+    if (action === 'Generated Draft' || action === 'Edited Draft') {
+      if (activity.draftId) {
+        try {
+          const token = localStorage.getItem('token');
+          const response = await axios.get(`/api/drafts/${activity.draftId}`, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          if (response.data) {
+            localStorage.setItem('editDraft', JSON.stringify(response.data));
+            navigate('/dashboard');
+          }
+        } catch (error) {
+          console.error('Failed to fetch draft:', error);
+          // Fallback to drafts page
+          navigate('/drafts');
+        }
+      } else {
+        navigate('/drafts');
+      }
+      return;
+    }
+    
+    // Template Used - redirect to templates page
+    if (action === 'Template Used') {
+      navigate('/templates');
+      return;
+    }
+    
+    // Deleted Draft - redirect to drafts page
+    if (action === 'Deleted Draft' || action === 'Downloaded Draft') {
+      navigate('/drafts');
+      return;
+    }
   };
 
   const getActionColorHex = (action) => {
@@ -334,16 +460,49 @@ const HistoryPage = () => {
               {filteredActivities.length} Result{filteredActivities.length !== 1 ? 's' : ''}
             </p>
 
+            {/* Helper Text */}
+            <div style={{
+              padding: '12px 16px', borderRadius: 10, marginBottom: 16,
+              background: 'rgba(59,130,246,0.08)', border: '1px solid rgba(59,130,246,0.2)',
+              display: 'flex', alignItems: 'center', gap: 10,
+            }}>
+              <span style={{ fontSize: 18 }}>💡</span>
+              <p style={{ color: '#94a3b8', fontSize: 12, lineHeight: 1.5 }}>
+                <strong style={{ color: '#60a5fa' }}>Tip:</strong> Click on any activity with a <span style={{ color: '#60a5fa', fontWeight: 700 }}>→</span> arrow to view or continue that work
+              </p>
+            </div>
+
             {/* Activity Cards */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               {filteredActivities.map((activity, idx) => {
                 const color = getActionColorHex(activity.action);
+                const isClickable = ['Generated Draft', 'Edited Draft', 'Template Used', 'Deleted Draft', 'Downloaded Draft'].includes(activity.action) || resumableActions.has(activity.action);
+                const isResuming = resumeLoadingId === activity._id;
                 return (
-                  <div key={idx} className="card glass-hover" style={{
-                    padding: 0, overflow: 'hidden',
-                    borderLeft: `4px solid ${color}`,
-                    background: 'rgba(15,23,42,0.7)',
-                  }}>
+                  <div 
+                    key={activity._id || idx} 
+                    className="card glass-hover" 
+                    onClick={() => isClickable && !isResuming && handleActivityClick(activity)}
+                    style={{
+                      padding: 0, overflow: 'hidden',
+                      borderLeft: `4px solid ${color}`,
+                      background: 'rgba(15,23,42,0.7)',
+                      cursor: isClickable ? 'pointer' : 'default',
+                      transition: 'all 0.2s ease',
+                    }}
+                    onMouseEnter={(e) => {
+                      if (isClickable) {
+                        e.currentTarget.style.transform = 'translateX(4px)';
+                        e.currentTarget.style.boxShadow = `0 8px 25px ${color}30`;
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (isClickable) {
+                        e.currentTarget.style.transform = 'translateX(0)';
+                        e.currentTarget.style.boxShadow = 'none';
+                      }
+                    }}
+                  >
                     <div style={{ padding: '18px 22px', display: 'flex', alignItems: 'flex-start', gap: 16 }}>
                       {/* Icon */}
                       <div style={{
@@ -378,6 +537,18 @@ const HistoryPage = () => {
                       <span style={{ color: '#475569', fontSize: 12, fontWeight: 600, whiteSpace: 'nowrap', flexShrink: 0 }}>
                         {formatDate(activity.createdAt || activity.timestamp)}
                       </span>
+                      
+                      {/* Click indicator for clickable activities */}
+                      {isClickable && (
+                        <div style={{
+                          width: 28, height: 28, borderRadius: 8, flexShrink: 0,
+                          background: `${color}22`, border: `1px solid ${color}40`,
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          color: color, fontSize: 14, fontWeight: 700,
+                        }}>
+                          {isResuming ? '⏳' : '→'}
+                        </div>
+                      )}
                     </div>
                   </div>
                 );

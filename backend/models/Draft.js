@@ -9,7 +9,10 @@ const DraftSchema = new mongoose.Schema({
         type: String,
         required: true,
     },
-    caseType: String,
+    caseType: String, // For backward compatibility, stores formatted full path
+    mainCategory: String, // Civil Law, Criminal Law, etc.
+    subcategory: String, // Suits, Complaints, etc.
+    specificType: String, // Money Recovery Suit, FIR Draft, etc.
     details: String,
     draftText: String,
     clauses: [{

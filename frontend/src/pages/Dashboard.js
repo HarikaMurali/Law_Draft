@@ -11,10 +11,10 @@ import '../App.css';
 const Dashboard = () => {
   const [draftText, setDraftText] = useState('');
   const [drafts, setDrafts] = useState([]);
-  const [selectedDraft, setSelectedDraft] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [templateData, setTemplateData] = useState(null);
+  const [loadingFromHistory, setLoadingFromHistory] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -35,8 +35,9 @@ const Dashboard = () => {
     const editDraft = localStorage.getItem('editDraft');
     if (editDraft) {
       const draft = JSON.parse(editDraft);
-      setSelectedDraft(draft);
       setDraftText(draft.draftText || draft.details || '');
+      setLoadingFromHistory(true);
+      setTimeout(() => setLoadingFromHistory(false), 2000); // Show banner for 2 seconds
       localStorage.removeItem('editDraft'); // Clear after loading
     }
     
@@ -64,7 +65,6 @@ const Dashboard = () => {
       const response = await axios.post('/api/generate', formData);
       if (response.data && response.data.draft) {
         setDraftText(response.data.draft);
-        setSelectedDraft(null);
       } else {
         setError('No draft was generated. Please try again.');
       }
@@ -114,6 +114,29 @@ const Dashboard = () => {
             </div>
           </div>
         </div>
+
+        {/* Loading from History Banner */}
+        {loadingFromHistory && (
+          <div style={{
+            padding: '14px 20px', borderRadius: 12, marginBottom: 20,
+            background: 'linear-gradient(135deg, rgba(168,85,247,0.15) 0%, rgba(124,58,237,0.1) 100%)',
+            border: '1px solid rgba(168,85,247,0.3)',
+            display: 'flex', alignItems: 'center', gap: 12,
+            animation: 'fade-in-up 0.3s ease',
+          }}>
+            <div style={{
+              width: 32, height: 32, borderRadius: 8,
+              background: 'rgba(168,85,247,0.2)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: 18,
+            }}>📄</div>
+            <div style={{ flex: 1 }}>
+              <p style={{ color: '#c084fc', fontSize: 13, fontWeight: 700, marginBottom: 2 }}>Draft Loaded from History</p>
+              <p style={{ color: '#94a3b8', fontSize: 12 }}>Your previous draft has been loaded and ready to edit</p>
+            </div>
+            <span style={{ fontSize: 20 }}>✓</span>
+          </div>
+        )}
 
         {/* ── Error Message ── */}
         {error && (
@@ -183,7 +206,6 @@ const Dashboard = () => {
                 <DraftList
                   drafts={drafts}
                   onSelectDraft={(draft) => {
-                    setSelectedDraft(draft);
                     setDraftText(draft.draftText || '');
                   }}
                 />

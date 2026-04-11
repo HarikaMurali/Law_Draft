@@ -13,16 +13,18 @@ const TemplatesPage = () => {
       id: 1,
       title: 'Civil Complaint',
       description: 'Standard civil complaint template for filing lawsuits',
-      category: 'Civil',
+      category: 'Civil Law → Suits → Declaration Suit',
+      mainCategory: 'Civil Law',
       icon: '⚖️',
       uses: 234,
       color: 'from-blue-500 to-blue-700',
     },
     {
       id: 2,
-      title: 'Criminal Defense Motion',
-      description: 'Motion to dismiss or suppress evidence in criminal cases',
-      category: 'Criminal',
+      title: 'Discharge Application',
+      description: 'Motion to discharge charges in criminal cases',
+      category: 'Criminal Law → Motions → Discharge Application',
+      mainCategory: 'Criminal Law',
       icon: '🔒',
       uses: 189,
       color: 'from-red-500 to-red-700',
@@ -30,8 +32,9 @@ const TemplatesPage = () => {
     {
       id: 3,
       title: 'Business Contract',
-      description: 'Comprehensive business agreement and partnership contract',
-      category: 'Contract',
+      description: 'Comprehensive business agreement and contract',
+      category: 'Civil Law → Contracts → Agreement Drafting',
+      mainCategory: 'Civil Law',
       icon: '📝',
       uses: 456,
       color: 'from-green-500 to-green-700',
@@ -40,7 +43,8 @@ const TemplatesPage = () => {
       id: 4,
       title: 'Divorce Petition',
       description: 'Petition for dissolution of marriage with child custody',
-      category: 'Family',
+      category: 'Family Law → Divorce → Mutual Consent Divorce',
+      mainCategory: 'Family Law',
       icon: '👨‍👩‍👧',
       uses: 312,
       color: 'from-purple-500 to-purple-700',
@@ -49,7 +53,8 @@ const TemplatesPage = () => {
       id: 5,
       title: 'Property Deed',
       description: 'Real estate transfer and property ownership deed',
-      category: 'Property',
+      category: 'Property Law → Property Transfer → Sale Deed',
+      mainCategory: 'Property Law',
       icon: '🏠',
       uses: 278,
       color: 'from-yellow-500 to-yellow-700',
@@ -58,7 +63,8 @@ const TemplatesPage = () => {
       id: 6,
       title: 'Employment Agreement',
       description: 'Standard employment contract with NDA and non-compete clauses',
-      category: 'Employment',
+      category: 'Employment Law → Agreements → Employment Contract',
+      mainCategory: 'Employment Law',
       icon: '💼',
       uses: 401,
       color: 'from-pink-500 to-pink-700',
@@ -67,37 +73,40 @@ const TemplatesPage = () => {
       id: 7,
       title: 'NDA Agreement',
       description: 'Non-disclosure agreement for confidential information protection',
-      category: 'Contract',
+      category: 'Employment Law → Agreements → NDA',
+      mainCategory: 'Employment Law',
       icon: '🤐',
       uses: 523,
       color: 'from-indigo-500 to-indigo-700',
     },
     {
       id: 8,
-      title: 'Will & Testament',
-      description: 'Last will and testament with asset distribution',
-      category: 'Estate',
+      title: 'Bail Application',
+      description: 'Regular Bail application in criminal matters',
+      category: 'Criminal Law → Bail Applications → Regular Bail',
+      mainCategory: 'Criminal Law',
       icon: '📜',
       uses: 267,
       color: 'from-gray-500 to-gray-700',
     },
     {
       id: 9,
-      title: 'Power of Attorney',
-      description: 'Legal authorization for decision-making authority',
-      category: 'Estate',
+      title: 'Property Transfer',
+      description: 'Gift deed for property transfer between family members',
+      category: 'Property Law → Property Transfer → Gift Deed',
+      mainCategory: 'Property Law',
       icon: '✍️',
       uses: 198,
       color: 'from-teal-500 to-teal-700',
     },
   ];
 
-  const categories = ['All', 'Civil', 'Criminal', 'Contract', 'Family', 'Property', 'Employment', 'Estate'];
+  const categories = ['All', 'Civil Law', 'Criminal Law', 'Family Law', 'Property Law', 'Employment Law'];
 
   const filteredTemplates =
     selectedCategory === 'All'
       ? templates
-      : templates.filter((t) => t.category === selectedCategory);
+      : templates.filter((t) => t.mainCategory === selectedCategory);
 
   const handleUseTemplate = (template) => {
     // Store template in localStorage and navigate to dashboard
@@ -114,8 +123,9 @@ const TemplatesPage = () => {
   };
 
   const getTemplatePreview = (category) => {
+    const mainCategory = category?.includes(' → ') ? category.split(' → ')[0].trim() : category;
     const previews = {
-      'Civil': `CIVIL COMPLAINT
+      'Civil Law': `CIVIL COMPLAINT
 
 IN THE [COURT NAME]
 [COUNTY], [STATE]
@@ -137,7 +147,7 @@ COMPLAINT FOR [CAUSE OF ACTION]
 3. FACTS
    [Detailed facts of the case]...`,
       
-      'Criminal': `MOTION TO DISMISS/SUPPRESS EVIDENCE
+      'Criminal Law': `MOTION TO DISMISS/SUPPRESS EVIDENCE
 
 IN THE [COURT NAME]
 [COUNTY], [STATE]
@@ -174,7 +184,7 @@ WHEREAS, the parties desire to form a partnership...
 3. PROFIT AND LOSS DISTRIBUTION
    Profits and losses shall be distributed...`,
       
-      'Family': `PETITION FOR DISSOLUTION OF MARRIAGE
+      'Family Law': `PETITION FOR DISSOLUTION OF MARRIAGE
 
 IN THE [COURT NAME]
 [COUNTY], [STATE]
@@ -199,7 +209,7 @@ Petitioner respectfully requests the Court grant dissolution of marriage...
 3. PROPERTY
    [Community property details]...`,
       
-      'Property': `PROPERTY DEED
+      'Property Law': `PROPERTY DEED
 
 GRANT DEED
 
@@ -219,7 +229,7 @@ the following described real property in [County], [State]:
 
 [LEGAL DESCRIPTION]...`,
       
-      'Employment': `EMPLOYMENT AGREEMENT
+      'Employment Law': `EMPLOYMENT AGREEMENT
 
 This Employment Agreement ("Agreement") is entered into on [DATE]
 
@@ -262,7 +272,7 @@ I, [YOUR NAME], a resident of [County], [State], being of sound mind and disposi
    All remaining property shall be distributed...`
     };
     
-    return previews[category] || 'Template preview not available.';
+    return previews[mainCategory] || 'Template preview not available.';
   };
 
   return (
@@ -367,8 +377,9 @@ I, [YOUR NAME], a resident of [County], [State], being of sound mind and disposi
               {/* Meta Info */}
               <div style={{
                 display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
+                flexDirection: "column",
+                alignItems: "stretch",
+                gap: "8px",
                 marginBottom: "15px",
                 fontSize: "12px",
                 color: "#999"
@@ -377,11 +388,14 @@ I, [YOUR NAME], a resident of [County], [State], being of sound mind and disposi
                   backgroundColor: "#f0f0f0",
                   padding: "4px 10px",
                   borderRadius: "12px",
-                  color: "#555"
+                  color: "#555",
+                  lineHeight: "1.35",
+                  wordBreak: "break-word",
+                  display: "inline-block"
                 }}>
                   {template.category}
                 </span>
-                <span>📊 {template.uses} uses</span>
+                <span style={{ textAlign: "right" }}>📊 {template.uses} uses</span>
               </div>
 
               {/* Action Buttons */}

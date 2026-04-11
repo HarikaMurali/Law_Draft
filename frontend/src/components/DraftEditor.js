@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from '../utils/axios';
 import '../App.css';
 
@@ -8,6 +8,42 @@ const DraftEditor = ({ draftText, onDraftChange, isLoading }) => {
   const [clauseSuggestions, setClauseSuggestions] = useState('');
   const [isProofreading, setIsProofreading] = useState(false);
   const [isSuggestingClauses, setIsSuggestingClauses] = useState(false);
+
+  useEffect(() => {
+    const savedProofread = localStorage.getItem('resumeProofread');
+    if (savedProofread) {
+      try {
+        const data = JSON.parse(savedProofread);
+        if (data.originalText) {
+          onDraftChange(data.originalText);
+        }
+        if (data.analysis) {
+          setProofreadResult(data.analysis);
+        }
+      } catch (error) {
+        console.error('Failed to load proofread data:', error);
+      } finally {
+        localStorage.removeItem('resumeProofread');
+      }
+    }
+
+    const savedClauses = localStorage.getItem('resumeClauses');
+    if (savedClauses) {
+      try {
+        const data = JSON.parse(savedClauses);
+        if (data.originalText) {
+          onDraftChange(data.originalText);
+        }
+        if (data.suggestions) {
+          setClauseSuggestions(data.suggestions);
+        }
+      } catch (error) {
+        console.error('Failed to load clause suggestions:', error);
+      } finally {
+        localStorage.removeItem('resumeClauses');
+      }
+    }
+  }, [onDraftChange]);
 
   const handleSaveDraft = async () => {
     if (!draftText.trim()) {

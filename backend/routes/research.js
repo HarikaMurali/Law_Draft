@@ -61,7 +61,7 @@ Provide real, accurate Indian cases only. If searching for keywords, find the mo
 
       console.log(`✅ Found ${cases.length} cases using Gemini AI`);
 
-      // Log activity
+      // Log activity with resume payload
       if (req.user?.userId) {
         try {
           await Activity.create({
@@ -70,7 +70,18 @@ Provide real, accurate Indian cases only. If searching for keywords, find the mo
             title: `Searched: ${query}`,
             type: 'General',
             details: `Found ${cases.length} relevant cases`,
-            metadata: { searchQuery: query, resultsCount: cases.length }
+            metadata: { 
+              query,
+              resultsCount: cases.length,
+              topResults: cases.slice(0, 3).map(c => ({ title: c.title, citation: c.citation })),
+              resumeType: 'research-case',
+              resumePayload: {
+                tab: 'caseLaw',
+                query,
+                results: cases,
+                timestamp: new Date().toISOString()
+              }
+            }
           });
         } catch (actErr) {
           console.error('Activity logging error:', actErr.message);
@@ -156,7 +167,7 @@ Provide real, accurate Indian legislation only.`;
 
       console.log(`✅ Found ${statutes.length} statute documents using Gemini AI`);
 
-      // Log activity
+      // Log activity with resume payload
       if (req.user?.userId) {
         try {
           await Activity.create({
@@ -165,7 +176,17 @@ Provide real, accurate Indian legislation only.`;
             title: `Searched: ${query}`,
             type: 'General',
             details: `Found ${statutes.length} relevant statutes/sections`,
-            metadata: { searchQuery: query, resultsCount: statutes.length }
+            metadata: { 
+              searchQuery: query, 
+              resultsCount: statutes.length,
+              resumeType: 'research-statute',
+              resumePayload: {
+                tab: 'statutes',
+                query,
+                results: statutes,
+                timestamp: new Date().toISOString()
+              }
+            }
           });
         } catch (actErr) {
           console.error('Activity logging error:', actErr.message);
@@ -231,7 +252,7 @@ Be concise but comprehensive. Use bullet points for clarity.`;
 
       console.log(`✅ Generated explanation for: ${term}`);
 
-      // Log activity
+      // Log activity with resume payload
       if (req.user?.userId) {
         try {
           await Activity.create({
@@ -240,7 +261,20 @@ Be concise but comprehensive. Use bullet points for clarity.`;
             title: `Looked up: ${term}`,
             type: 'General',
             details: `Searched for definition of legal term/section`,
-            metadata: { term }
+            metadata: { 
+              term,
+              resumeType: 'research-dictionary',
+              resumePayload: {
+                tab: 'dictionary',
+                query: term,
+                results: [{
+                  term,
+                  definition: explanation,
+                  category: 'Indian Law'
+                }],
+                timestamp: new Date().toISOString()
+              }
+            }
           });
         } catch (actErr) {
           console.error('Activity logging error:', actErr.message);

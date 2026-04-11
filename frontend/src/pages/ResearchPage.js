@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Layout from '../components/Layout';
 import axios from '../utils/axios';
 import '../App.css';
@@ -7,12 +7,46 @@ const ResearchPage = () => {
   const [activeTab, setActiveTab] = useState('caseLaw');
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
-  const [selectedCase, setSelectedCase] = useState(null);
   const [isSearching, setIsSearching] = useState(false);
+  const [loadingFromHistory, setLoadingFromHistory] = useState(false);
 
-  const handleSearch = async () => {
-    if (!searchQuery.trim()) {
-      alert('Please enter a search query');
+  // Check for research data from History page
+  useEffect(() => {
+    const storedData = localStorage.getItem('researchData');
+    if (storedData) {
+      try {
+        const data = JSON.parse(storedData);
+        setActiveTab(data.tab || 'caseLaw');
+        setSearchQuery(data.query || '');
+        const hasSavedResults = Array.isArray(data.resumeResults) && data.resumeResults.length > 0;
+
+        if (hasSavedResults) {
+          setLoadingFromHistory(true);
+          setSearchResults(data.resumeResults);
+          setTimeout(() => setLoadingFromHistory(false), 1200);
+          localStorage.removeItem('researchData');
+          return;
+        }
+
+        if (data.query) {
+          setLoadingFromHistory(true);
+          setTimeout(() => {
+            performSearch(data.query, data.tab || 'caseLaw', true);
+          }, 300);
+        } else {
+          setLoadingFromHistory(false);
+        }
+
+        localStorage.removeItem('researchData');
+      } catch (error) {
+        console.error('Failed to parse research data:', error);
+        setLoadingFromHistory(false);
+      }
+    }
+  }, []);
+
+  const performSearch = async (query, tab, fromHistory = false) => {
+    if (!query?.trim()) {
       return;
     }
 
@@ -22,15 +56,14 @@ const ResearchPage = () => {
     try {
       let response;
       
-      if (activeTab === 'caseLaw') {
-        response = await axios.post('/api/research/cases', { query: searchQuery });
+      if (tab === 'caseLaw') {
+        response = await axios.post('/api/research/cases', { query });
         setSearchResults(response.data.results || []);
-      } else if (activeTab === 'statutes') {
-        response = await axios.post('/api/research/statutes', { query: searchQuery });
+      } else if (tab === 'statutes') {
+        response = await axios.post('/api/research/statutes', { query });
         setSearchResults(response.data.results || []);
-      } else if (activeTab === 'dictionary') {
-        response = await axios.post('/api/research/dictionary', { term: searchQuery });
-        // Dictionary returns single result, format it for display
+      } else if (tab === 'dictionary') {
+        response = await axios.post('/api/research/dictionary', { term: query });
         if (response.data.success) {
           setSearchResults([{
             term: response.data.term,
@@ -39,17 +72,45 @@ const ResearchPage = () => {
           }]);
         }
       }
+      
+      if (fromHistory) {
+        setLoadingFromHistory(false);
+      }
     } catch (error) {
       console.error('Search error:', error);
-      alert('Search failed. Please try again.');
+      if (!fromHistory) {
+        alert('Search failed. Please try again.');
+      }
+      setLoadingFromHistory(false);
     } finally {
       setIsSearching(false);
     }
   };
 
+  const handleSearch = async () => {
+    performSearch(searchQuery, activeTab);
+  };
+
   const handleCopyToClipboard = (text) => {
     navigator.clipboard.writeText(text);
     alert('Copied to clipboard!');
+  };
+
+  const handleResearchMore = (query, type) => {
+    let url = '';
+    
+    if (type === 'case') {
+      // Search on Indian Kanoon
+      url = `https://indiankanoon.org/search/?formInput=${encodeURIComponent(query)}`;
+    } else if (type === 'statute') {
+      // Search on India Code
+      url = `https://www.indiacode.nic.in/search?searchText=${encodeURIComponent(query)}`;
+    } else if (type === 'dictionary') {
+      // Search on Google for legal definition
+      url = `https://www.google.com/search?q=${encodeURIComponent(query + ' legal definition india')}`;
+    }
+    
+    window.open(url, '_blank');
   };
 
   const tabConfig = {
@@ -79,6 +140,33 @@ const ResearchPage = () => {
             <p style={{ color: '#94a3b8', fontSize: 14, marginLeft: 60 }}>AI-powered Indian legal research — Cases, Statutes & Definitions</p>
           </div>
         </div>
+
+        {/* Loading from History Banner */}
+        {loadingFromHistory && (
+          <div style={{
+            padding: '14px 20px', borderRadius: 12, marginBottom: 20,
+            background: 'linear-gradient(135deg, rgba(59,130,246,0.15) 0%, rgba(37,99,235,0.1) 100%)',
+            border: '1px solid rgba(59,130,246,0.3)',
+            display: 'flex', alignItems: 'center', gap: 12,
+            animation: 'fade-in-up 0.3s ease',
+          }}>
+            <div style={{
+              width: 32, height: 32, borderRadius: 8,
+              background: 'rgba(59,130,246,0.2)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: 18,
+            }}>📜</div>
+            <div style={{ flex: 1 }}>
+              <p style={{ color: '#60a5fa', fontSize: 13, fontWeight: 700, marginBottom: 2 }}>Loading from History</p>
+              <p style={{ color: '#94a3b8', fontSize: 12 }}>Retrieving your previous search results...</p>
+            </div>
+            <div style={{
+              width: 20, height: 20, border: '2px solid rgba(59,130,246,0.3)',
+              borderTopColor: '#3b82f6', borderRadius: '50%',
+              animation: 'spin 0.8s linear infinite',
+            }} />
+          </div>
+        )}
 
         {/* ── Category Cards ── */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, marginBottom: 28 }}>
@@ -157,6 +245,7 @@ const ResearchPage = () => {
                 onClick={handleSearch}
                 disabled={isSearching}
                 className="btn-primary"
+                data-search-trigger="true"
                 style={{
                   position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)',
                   padding: '12px 24px', borderRadius: 10, fontSize: 14,
@@ -237,6 +326,12 @@ const ResearchPage = () => {
                             background: 'linear-gradient(135deg, #3b82f6, #2563eb)',
                             boxShadow: '0 4px 15px rgba(59,130,246,0.3)',
                           }}>📄 Copy Case Details</button>
+                        <button onClick={() => handleResearchMore(caseItem.title, 'case')}
+                          className="btn-primary" style={{
+                            flex: 1, padding: '10px 16px', borderRadius: 10, fontSize: 13,
+                            background: 'linear-gradient(135deg, #10b981, #059669)',
+                            boxShadow: '0 4px 15px rgba(16,185,129,0.3)',
+                          }}>🔗 Research More</button>
                       </div>
                     </div>
                   </div>
@@ -309,13 +404,19 @@ const ResearchPage = () => {
                         ))}
                       </div>
                     </div>
-                    <div style={{ padding: '0 24px 20px' }}>
+                    <div style={{ padding: '0 24px 20px', display: 'flex', gap: 10 }}>
                       <button onClick={() => handleCopyToClipboard(`${statute.title}\n${statute.description}`)}
                         className="btn-primary" style={{
-                          width: '100%', padding: '11px 16px', borderRadius: 10, fontSize: 13,
+                          flex: 1, padding: '11px 16px', borderRadius: 10, fontSize: 13,
                           background: 'linear-gradient(135deg, #10b981, #059669)',
                           boxShadow: '0 4px 15px rgba(16,185,129,0.3)',
                         }}>📋 Copy Details</button>
+                      <button onClick={() => handleResearchMore(statute.title, 'statute')}
+                        className="btn-primary" style={{
+                          flex: 1, padding: '11px 16px', borderRadius: 10, fontSize: 13,
+                          background: 'linear-gradient(135deg, #3b82f6, #2563eb)',
+                          boxShadow: '0 4px 15px rgba(59,130,246,0.3)',
+                        }}>🔗 Research More</button>
                     </div>
                   </div>
                 ))}
@@ -376,12 +477,20 @@ const ResearchPage = () => {
                       }}>
                         <div style={{ color: '#cbd5e1', fontSize: 14, lineHeight: 1.8, whiteSpace: 'pre-wrap' }}>{term.definition}</div>
                       </div>
-                      <button onClick={() => handleCopyToClipboard(`${term.term}: ${term.definition}`)}
-                        className="btn-primary" style={{
-                          width: '100%', padding: '12px 16px', borderRadius: 10, fontSize: 13,
-                          background: 'linear-gradient(135deg, #a855f7, #7c3aed)',
-                          boxShadow: '0 4px 15px rgba(168,85,247,0.3)',
-                        }}>📋 Copy Definition</button>
+                      <div style={{ display: 'flex', gap: 10 }}>
+                        <button onClick={() => handleCopyToClipboard(`${term.term}: ${term.definition}`)}
+                          className="btn-primary" style={{
+                            flex: 1, padding: '12px 16px', borderRadius: 10, fontSize: 13,
+                            background: 'linear-gradient(135deg, #a855f7, #7c3aed)',
+                            boxShadow: '0 4px 15px rgba(168,85,247,0.3)',
+                          }}>📋 Copy Definition</button>
+                        <button onClick={() => handleResearchMore(term.term, 'dictionary')}
+                          className="btn-primary" style={{
+                            flex: 1, padding: '12px 16px', borderRadius: 10, fontSize: 13,
+                            background: 'linear-gradient(135deg, #10b981, #059669)',
+                            boxShadow: '0 4px 15px rgba(16,185,129,0.3)',
+                          }}>🔗 Research More</button>
+                      </div>
                     </div>
                   </div>
                 ))}

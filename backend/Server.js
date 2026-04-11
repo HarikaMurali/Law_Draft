@@ -26,6 +26,7 @@ const generateRouter = require('./routes/generate');
 const researchRouter = require('./routes/research');
 const activityRouter = require('./routes/activity');
 const analyticsRouter = require('./routes/analytics');
+const uploadRouter = require('./routes/upload');
 const Activity = require('./models/Activity');
 const authMiddleware = require('./middleware/auth');
 
@@ -36,6 +37,7 @@ app.use('/api/generate', generateRouter);
 app.use('/api/research', researchRouter);
 app.use('/api/activity', activityRouter);
 app.use('/api/analytics', analyticsRouter);
+app.use('/api/upload', uploadRouter);
 
 // Real AI Proofreading with Gemini
 app.post('/api/proofread', authMiddleware, async (req, res) => {
@@ -45,6 +47,26 @@ app.post('/api/proofread', authMiddleware, async (req, res) => {
       return res.status(400).json({ error: 'Text is required' });
     }
     
+    const logProofreadingActivity = async (detailsLabel, analysisText) => {
+      try {
+        await Activity.create({
+          userId: req.user.userId,
+          action: 'Proofreading',
+          title: 'Document proofread',
+          type: 'General',
+          details: detailsLabel,
+          metadata: {
+            resumeType: 'proofread',
+            resumePayload: {
+              analysis: analysisText,
+              originalText: text,
+              timestamp: new Date().toISOString()
+            }
+          }
+        });
+      } catch (_) {}
+    };
+
     try {
       const prompt = `You are a legal proofreading expert. Analyze the following legal draft and provide:
 
@@ -60,15 +82,12 @@ ${text}`;
 
       const analysis = await generateContent(prompt);
       
-      // Log proofreading activity
-      try { await Activity.create({ userId: req.user.userId, action: 'Proofreading', title: 'Document proofread', type: 'General', details: 'AI proofreading completed' }); } catch (_) {}
+  // Log proofreading activity with resume payload
+  await logProofreadingActivity('AI proofreading completed', analysis);
       
       res.json({ result: analysis });
     } catch (aiError) {
       console.error('Gemini proofreading error:', aiError.message);
-      
-      // Log even on fallback
-      try { await Activity.create({ userId: req.user.userId, action: 'Proofreading', title: 'Document proofread', type: 'General', details: 'Proofreading (fallback)' }); } catch (_) {}
       
       // Fallback to mock response
       const mockResult = `Proofreading Analysis:
@@ -86,6 +105,8 @@ Overall: The draft appears well-structured and professionally written.
 
 (Note: AI service temporarily used fallback analysis)`;
       
+  await logProofreadingActivity('Proofreading (fallback)', mockResult);
+      
       res.json({ result: mockResult });
     }
   } catch (error) {
@@ -101,6 +122,26 @@ app.post('/api/suggest-clauses', authMiddleware, async (req, res) => {
       return res.status(400).json({ error: 'Text is required' });
     }
     
+    const logClauseActivity = async (detailsLabel, suggestionText) => {
+      try {
+        await Activity.create({
+          userId: req.user.userId,
+          action: 'Clause Suggestion',
+          title: 'Clause suggestions generated',
+          type: 'General',
+          details: detailsLabel,
+          metadata: {
+            resumeType: 'clause-suggestion',
+            resumePayload: {
+              suggestions: suggestionText,
+              originalText: text,
+              timestamp: new Date().toISOString()
+            }
+          }
+        });
+      } catch (_) {}
+    };
+
     try {
       const prompt = `You are a legal clause expert. Based on the following legal draft, suggest 5-7 additional important clauses that should be considered for inclusion.
 
@@ -116,15 +157,12 @@ Provide professional, legally sound suggestions.`;
 
       const suggestions = await generateContent(prompt);
       
-      // Log clause suggestion activity
-      try { await Activity.create({ userId: req.user.userId, action: 'Clause Suggestion', title: 'Clause suggestions generated', type: 'General', details: 'AI clause suggestion completed' }); } catch (_) {}
+  // Log clause suggestion activity with resume payload
+  await logClauseActivity('AI clause suggestion completed', suggestions);
       
       res.json({ suggestions });
     } catch (aiError) {
       console.error('Gemini clause suggestion error:', aiError.message);
-      
-      // Log even on fallback
-      try { await Activity.create({ userId: req.user.userId, action: 'Clause Suggestion', title: 'Clause suggestions generated', type: 'General', details: 'Clause suggestion (fallback)' }); } catch (_) {}
       
       // Fallback to mock suggestions
       const mockSuggestions = `Suggested Additional Clauses:
@@ -145,6 +183,8 @@ Provide professional, legally sound suggestions.`;
    "If any provision of this agreement is found invalid, the remaining provisions shall continue in full force..."
 
 (Note: AI service temporarily used standard clause suggestions)`;
+      
+  await logClauseActivity('Clause suggestion (fallback)', mockSuggestions);
       
       res.json({ suggestions: mockSuggestions });
     }

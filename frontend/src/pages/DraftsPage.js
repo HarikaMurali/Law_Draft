@@ -1,8 +1,9 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from '../utils/axios';
 import jsPDF from 'jspdf';
 import Layout from '../components/Layout';
+import UploadDocument from '../components/UploadDocument';
 import { formatDate } from '../utils/dateFormat';
 import '../App.css';
 
@@ -13,6 +14,7 @@ const DraftsPage = () => {
   const [filterType, setFilterType] = useState('all');
   const [sortBy, setSortBy] = useState('date');
   const [viewDraft, setViewDraft] = useState(null);
+  const [activeTab, setActiveTab] = useState('drafts'); // 'drafts' or 'upload'
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -149,6 +151,25 @@ const DraftsPage = () => {
     doc.save(filename);
   };
 
+  const handleDraftGenerated = (draftContent, metadata) => {
+    // Show the draft in editor
+    setViewDraft({
+      _id: `tmp-${Date.now()}`,
+      title: `${metadata.caseType} Draft - From Document`,
+      caseType: metadata.caseType,
+      draftText: draftContent,
+      content: draftContent,
+      createdAt: new Date().toISOString(),
+      metadata
+    });
+    
+    // Refresh drafts list
+    fetchDrafts();
+    
+    // Switch to drafts tab
+    setActiveTab('drafts');
+  };
+
   const statCards = [
     { label: 'Total Drafts', value: drafts.length, color: '#a855f7' },
     { label: 'This Month', value: drafts.filter(d => new Date(d.createdAt).getMonth() === new Date().getMonth()).length, color: '#3b82f6' },
@@ -190,6 +211,56 @@ const DraftsPage = () => {
           </button>
         </div>
 
+        {/* ── Tabs ── */}
+        <div style={{
+          display: 'flex', gap: 10, marginBottom: 28,
+          borderBottom: '1px solid rgba(148,163,184,0.15)',
+          paddingBottom: 0
+        }}>
+          <button
+            onClick={() => setActiveTab('drafts')}
+            style={{
+              padding: '12px 20px',
+              background: activeTab === 'drafts' ? 'rgba(168,85,247,0.15)' : 'transparent',
+              border: activeTab === 'drafts' ? '1px solid rgba(168,85,247,0.4)' : 'none',
+              borderBottom: activeTab === 'drafts' ? '2px solid #a855f7' : '1px solid rgba(148,163,184,0.15)',
+              borderRadius: '8px 8px 0 0',
+              color: activeTab === 'drafts' ? '#c4b5fd' : '#64748b',
+              fontWeight: activeTab === 'drafts' ? 700 : 500,
+              cursor: 'pointer',
+              fontSize: 14,
+              transition: 'all 0.2s'
+            }}
+          >
+            📋 My Drafts
+          </button>
+          <button
+            onClick={() => setActiveTab('upload')}
+            style={{
+              padding: '12px 20px',
+              background: activeTab === 'upload' ? 'rgba(168,85,247,0.15)' : 'transparent',
+              border: activeTab === 'upload' ? '1px solid rgba(168,85,247,0.4)' : 'none',
+              borderBottom: activeTab === 'upload' ? '2px solid #a855f7' : '1px solid rgba(148,163,184,0.15)',
+              borderRadius: '8px 8px 0 0',
+              color: activeTab === 'upload' ? '#c4b5fd' : '#64748b',
+              fontWeight: activeTab === 'upload' ? 700 : 500,
+              cursor: 'pointer',
+              fontSize: 14,
+              transition: 'all 0.2s'
+            }}
+          >
+            📤 Upload & Analyze
+          </button>
+        </div>
+
+        {/* ── Upload Tab ── */}
+        {activeTab === 'upload' && (
+          <UploadDocument onDraftGenerated={handleDraftGenerated} />
+        )}
+
+        {/* ── Drafts Tab ── */}
+        {activeTab === 'drafts' && (
+          <>
         {/* ── Search & Filter Tab ── */}
         <div className="card" style={{
           marginBottom: 28, padding: 0, overflow: 'hidden',
@@ -394,7 +465,9 @@ const DraftsPage = () => {
             })}
           </div>
         )}
-      </div>
+
+        </>
+        )}
 
       {/* ── View Draft Modal ── */}
       {viewDraft && (
@@ -516,6 +589,7 @@ const DraftsPage = () => {
           </div>
         </div>
       )}
+      </div>
     </Layout>
   );
 };

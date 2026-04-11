@@ -1,6 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import Layout from '../components/Layout';
-import { formatDate } from '../utils/dateFormat';
 import '../App.css';
 
 const SettingsPage = () => {
