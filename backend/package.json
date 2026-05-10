@@ -14,17 +14,30 @@
   "dependencies": {
     "@google/generative-ai": "^0.21.0",
     "axios": "^1.11.0",
+<<<<<<< HEAD
     "bcryptjs": "^3.0.3",
     "cors": "^2.8.6",
     "dotenv": "^16.6.1",
     "express": "^4.22.1",
     "jsonwebtoken": "^9.0.3",
     "mongoose": "^8.23.0",
+=======
+    "bcryptjs": "^3.0.2",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^8.0.3",
+>>>>>>> 66f77381e04af314442a171e9764063c060781d1
     "multer": "^2.1.1",
     "openai": "^5.23.1",
     "pdf-parse": "^2.4.5"
   },
   "devDependencies": {
+<<<<<<< HEAD
     "nodemon": "^3.1.14"
+=======
+    "nodemon": "^3.0.2"
+>>>>>>> 66f77381e04af314442a171e9764063c060781d1
   }
 }

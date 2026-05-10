@@ -4,6 +4,7 @@ const cors = require('cors');
 const mongoose = require('mongoose');
 const { generateContent } = require('./utils/gemini');
 
+<<<<<<< HEAD
 const requiredEnv = ['MONGO_URI', 'JWT_SECRET', 'GOOGLE_AI_KEY'];
 const missingEnv = requiredEnv.filter((name) => !process.env[name] || !String(process.env[name]).trim());
 if (missingEnv.length > 0) {
@@ -11,6 +12,8 @@ if (missingEnv.length > 0) {
   process.exit(1);
 }
 
+=======
+>>>>>>> 66f77381e04af314442a171e9764063c060781d1
 const app = express();
 
 // Configure CORS to allow both local development and production requests

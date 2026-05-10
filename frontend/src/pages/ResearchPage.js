@@ -146,7 +146,6 @@ const ResearchPage = () => {
     whiteSpace: 'nowrap',
     maxWidth: '100%',
   });
-
   return (
     <Layout>
       <div className="animate-fade-in-up" style={{ maxWidth: 1100, margin: '0 auto', padding: '32px 20px' }}>
@@ -311,6 +310,7 @@ const ResearchPage = () => {
               <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
                 {searchResults.map((caseItem) => (
                   <div key={caseItem.id} className="card glass-hover" style={{
+<<<<<<< HEAD
                     ...resultCardStyle,
                     borderLeft: '4px solid #3b82f6',
                   }}>
@@ -343,18 +343,60 @@ const ResearchPage = () => {
                       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 10 }}>
                         <button onClick={() => handleCopyToClipboard(caseItem.citation)} style={{
                           padding: '10px 14px', borderRadius: 10, fontSize: 13, fontWeight: 600,
+=======
+                    padding: 0, overflow: 'hidden',
+                    borderLeft: '4px solid #3b82f6',
+                    background: 'rgba(15,23,42,0.7)',
+                  }}>
+                    <div style={{ padding: '24px 26px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 16, marginBottom: 14 }}>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
+                            <span style={{ fontSize: 28 }}>⚖️</span>
+                            <h3 style={{ fontSize: 18, fontWeight: 800, color: '#fff' }}>{caseItem.title}</h3>
+                          </div>
+                          <p style={{ color: '#60a5fa', fontFamily: 'monospace', fontSize: 14, marginLeft: 42 }}>📑 {caseItem.citation}</p>
+                          <div style={{ display: 'flex', gap: 16, marginTop: 8, marginLeft: 42 }}>
+                            <span style={{ color: '#64748b', fontSize: 13 }}>🏛️ {caseItem.court}</span>
+                            <span style={{ color: '#64748b', fontSize: 13 }}>📅 {caseItem.year}</span>
+                          </div>
+                        </div>
+                        <span style={{
+                          padding: '6px 14px', borderRadius: 20, fontSize: 12, fontWeight: 700,
+                          background: 'rgba(59,130,246,0.15)', border: '1px solid rgba(59,130,246,0.3)',
+                          color: '#60a5fa', whiteSpace: 'nowrap', flexShrink: 0,
+                        }}>{caseItem.relevance}</span>
+                      </div>
+                      <div style={{
+                        background: 'rgba(30,41,59,0.5)', borderRadius: 10, padding: 16,
+                        marginLeft: 42, marginBottom: 16,
+                      }}>
+                        <p style={{ color: '#cbd5e1', fontSize: 14, lineHeight: 1.7 }}>{caseItem.summary}</p>
+                      </div>
+                      <div style={{ display: 'flex', gap: 10, marginLeft: 42 }}>
+                        <button onClick={() => handleCopyToClipboard(caseItem.citation)} style={{
+                          flex: 1, padding: '10px 16px', borderRadius: 10, fontSize: 13, fontWeight: 600,
+>>>>>>> 66f77381e04af314442a171e9764063c060781d1
                           background: 'rgba(30,41,59,0.8)', border: '1px solid rgba(148,163,184,0.15)',
                           color: '#e2e8f0', cursor: 'pointer', transition: 'all 0.2s',
                         }}>📋 Copy Citation</button>
                         <button onClick={() => handleCopyToClipboard(`${caseItem.title}\n${caseItem.citation}\n${caseItem.summary}`)}
                           className="btn-primary" style={{
+<<<<<<< HEAD
                             padding: '10px 14px', borderRadius: 10, fontSize: 13,
+=======
+                            flex: 1, padding: '10px 16px', borderRadius: 10, fontSize: 13,
+>>>>>>> 66f77381e04af314442a171e9764063c060781d1
                             background: 'linear-gradient(135deg, #3b82f6, #2563eb)',
                             boxShadow: '0 4px 15px rgba(59,130,246,0.3)',
                           }}>📄 Copy Case Details</button>
                         <button onClick={() => handleResearchMore(caseItem.title, 'case')}
                           className="btn-primary" style={{
+<<<<<<< HEAD
                             padding: '10px 14px', borderRadius: 10, fontSize: 13,
+=======
+                            flex: 1, padding: '10px 16px', borderRadius: 10, fontSize: 13,
+>>>>>>> 66f77381e04af314442a171e9764063c060781d1
                             background: 'linear-gradient(135deg, #10b981, #059669)',
                             boxShadow: '0 4px 15px rgba(16,185,129,0.3)',
                           }}>🔗 Research More</button>
@@ -399,6 +441,7 @@ const ResearchPage = () => {
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: 16 }}>
                 {searchResults.map((statute) => (
                   <div key={statute.id} className="card glass-hover" style={{
+<<<<<<< HEAD
                     ...resultCardStyle,
                     borderLeft: '4px solid #10b981',
                   }}>
@@ -425,12 +468,53 @@ const ResearchPage = () => {
                       <button onClick={() => handleCopyToClipboard(`${statute.title}\n${statute.description}`)}
                         className="btn-primary" style={{
                           padding: '11px 16px', borderRadius: 10, fontSize: 13,
+=======
+                    padding: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column',
+                    borderLeft: '4px solid #10b981',
+                    background: 'rgba(15,23,42,0.7)',
+                  }}>
+                    <div style={{ padding: '22px 24px', flex: 1 }}>
+                      <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12, marginBottom: 14 }}>
+                        <span style={{ fontSize: 30, flexShrink: 0 }}>📜</span>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <h3 style={{ fontSize: 16, fontWeight: 800, color: '#fff', marginBottom: 8 }}>{statute.title}</h3>
+                          <span style={{
+                            display: 'inline-block', padding: '4px 10px', borderRadius: 6, fontSize: 11, fontWeight: 700,
+                            background: 'rgba(16,185,129,0.15)', border: '1px solid rgba(16,185,129,0.3)',
+                            color: '#34d399',
+                          }}>{statute.sections}</span>
+                        </div>
+                      </div>
+                      <div style={{
+                        background: 'rgba(30,41,59,0.5)', borderRadius: 10, padding: 14, marginBottom: 14,
+                      }}>
+                        <p style={{ color: '#cbd5e1', fontSize: 13, lineHeight: 1.65 }}>{statute.description}</p>
+                      </div>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 14 }}>
+                        {statute.keywords.split(',').map((keyword, idx) => (
+                          <span key={idx} style={{
+                            padding: '3px 10px', borderRadius: 20, fontSize: 11, fontWeight: 600,
+                            background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.25)',
+                            color: '#6ee7b7',
+                          }}>{keyword.trim()}</span>
+                        ))}
+                      </div>
+                    </div>
+                    <div style={{ padding: '0 24px 20px', display: 'flex', gap: 10 }}>
+                      <button onClick={() => handleCopyToClipboard(`${statute.title}\n${statute.description}`)}
+                        className="btn-primary" style={{
+                          flex: 1, padding: '11px 16px', borderRadius: 10, fontSize: 13,
+>>>>>>> 66f77381e04af314442a171e9764063c060781d1
                           background: 'linear-gradient(135deg, #10b981, #059669)',
                           boxShadow: '0 4px 15px rgba(16,185,129,0.3)',
                         }}>📋 Copy Details</button>
                       <button onClick={() => handleResearchMore(statute.title, 'statute')}
                         className="btn-primary" style={{
+<<<<<<< HEAD
                           padding: '11px 16px', borderRadius: 10, fontSize: 13,
+=======
+                          flex: 1, padding: '11px 16px', borderRadius: 10, fontSize: 13,
+>>>>>>> 66f77381e04af314442a171e9764063c060781d1
                           background: 'linear-gradient(135deg, #3b82f6, #2563eb)',
                           boxShadow: '0 4px 15px rgba(59,130,246,0.3)',
                         }}>🔗 Research More</button>
@@ -473,6 +557,7 @@ const ResearchPage = () => {
               <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
                 {searchResults.map((term, idx) => (
                   <div key={idx} className="card glass-hover" style={{
+<<<<<<< HEAD
                     ...resultCardStyle,
                     borderLeft: '4px solid #a855f7',
                   }}>
@@ -493,12 +578,43 @@ const ResearchPage = () => {
                         <button onClick={() => handleCopyToClipboard(`${term.term}: ${term.definition}`)}
                           className="btn-primary" style={{
                             padding: '12px 16px', borderRadius: 10, fontSize: 13,
+=======
+                    padding: 0, overflow: 'hidden',
+                    borderLeft: '4px solid #a855f7',
+                    background: 'rgba(15,23,42,0.7)',
+                  }}>
+                    <div style={{ padding: '24px 26px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                          <span style={{ fontSize: 28 }}>📖</span>
+                          <h3 style={{ fontSize: 20, fontWeight: 800, color: '#fff' }}>{term.term}</h3>
+                        </div>
+                        <span style={{
+                          padding: '5px 14px', borderRadius: 20, fontSize: 11, fontWeight: 700,
+                          background: 'rgba(168,85,247,0.15)', border: '1px solid rgba(168,85,247,0.3)',
+                          color: '#c084fc',
+                        }}>{term.category}</span>
+                      </div>
+                      <div style={{
+                        background: 'rgba(30,41,59,0.5)', borderRadius: 10, padding: 18, marginBottom: 16,
+                      }}>
+                        <div style={{ color: '#cbd5e1', fontSize: 14, lineHeight: 1.8, whiteSpace: 'pre-wrap' }}>{term.definition}</div>
+                      </div>
+                      <div style={{ display: 'flex', gap: 10 }}>
+                        <button onClick={() => handleCopyToClipboard(`${term.term}: ${term.definition}`)}
+                          className="btn-primary" style={{
+                            flex: 1, padding: '12px 16px', borderRadius: 10, fontSize: 13,
+>>>>>>> 66f77381e04af314442a171e9764063c060781d1
                             background: 'linear-gradient(135deg, #a855f7, #7c3aed)',
                             boxShadow: '0 4px 15px rgba(168,85,247,0.3)',
                           }}>📋 Copy Definition</button>
                         <button onClick={() => handleResearchMore(term.term, 'dictionary')}
                           className="btn-primary" style={{
+<<<<<<< HEAD
                             padding: '12px 16px', borderRadius: 10, fontSize: 13,
+=======
+                            flex: 1, padding: '12px 16px', borderRadius: 10, fontSize: 13,
+>>>>>>> 66f77381e04af314442a171e9764063c060781d1
                             background: 'linear-gradient(135deg, #10b981, #059669)',
                             boxShadow: '0 4px 15px rgba(16,185,129,0.3)',
                           }}>🔗 Research More</button>

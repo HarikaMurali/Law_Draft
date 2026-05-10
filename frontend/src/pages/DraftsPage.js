@@ -18,6 +18,7 @@ const DraftsPage = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
+<<<<<<< HEAD
     const fetchDrafts = async () => {
       try {
         const token = localStorage.getItem('token');
@@ -30,12 +31,36 @@ const DraftsPage = () => {
       }
     };
 
+=======
+>>>>>>> 66f77381e04af314442a171e9764063c060781d1
     fetchDrafts();
   }, []);
 
   useEffect(() => {
+<<<<<<< HEAD
     let filtered = drafts;
 
+=======
+    filterAndSortDrafts();
+  }, [searchTerm, filterType, sortBy, drafts]);
+
+  const fetchDrafts = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const res = await axios.get('/api/drafts', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setDrafts(res.data);
+    } catch (err) {
+      console.error('Failed to fetch drafts:', err);
+    }
+  };
+
+  const filterAndSortDrafts = () => {
+    let filtered = drafts;
+
+    // Search filter
+>>>>>>> 66f77381e04af314442a171e9764063c060781d1
     if (searchTerm) {
       filtered = filtered.filter(
         (draft) =>
@@ -44,22 +69,38 @@ const DraftsPage = () => {
       );
     }
 
+<<<<<<< HEAD
+=======
+    // Type filter
+>>>>>>> 66f77381e04af314442a171e9764063c060781d1
     if (filterType !== 'all') {
       filtered = filtered.filter((draft) => draft.caseType === filterType);
     }
 
+<<<<<<< HEAD
     filtered = [...filtered].sort((a, b) => {
       if (sortBy === 'date') {
         return new Date(b.createdAt) - new Date(a.createdAt);
       }
       if (sortBy === 'name') {
+=======
+    // Sort
+    filtered.sort((a, b) => {
+      if (sortBy === 'date') {
+        return new Date(b.createdAt) - new Date(a.createdAt);
+      } else if (sortBy === 'name') {
+>>>>>>> 66f77381e04af314442a171e9764063c060781d1
         return a.title?.localeCompare(b.title);
       }
       return 0;
     });
 
     setFilteredDrafts(filtered);
+<<<<<<< HEAD
   }, [drafts, searchTerm, filterType, sortBy]);
+=======
+  };
+>>>>>>> 66f77381e04af314442a171e9764063c060781d1
 
   const deleteDraft = async (id) => {
     if (!window.confirm('Are you sure you want to delete this draft?')) return;
@@ -70,6 +111,7 @@ const DraftsPage = () => {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (viewDraft && viewDraft._id === id) setViewDraft(null);
+<<<<<<< HEAD
       const refreshDrafts = async () => {
         try {
           const token = localStorage.getItem('token');
@@ -82,6 +124,9 @@ const DraftsPage = () => {
         }
       };
       refreshDrafts();
+=======
+      fetchDrafts();
+>>>>>>> 66f77381e04af314442a171e9764063c060781d1
     } catch (err) {
       console.error('Failed to delete draft:', err);
     }
@@ -169,6 +214,7 @@ const DraftsPage = () => {
     });
     
     // Refresh drafts list
+<<<<<<< HEAD
     (async () => {
       try {
         const token = localStorage.getItem('token');
@@ -180,6 +226,9 @@ const DraftsPage = () => {
         console.error('Failed to fetch drafts:', err);
       }
     })();
+=======
+    fetchDrafts();
+>>>>>>> 66f77381e04af314442a171e9764063c060781d1
     
     // Switch to drafts tab
     setActiveTab('drafts');

@@ -36,6 +36,7 @@ const UploadDocument = ({ onDraftGenerated }) => {
     'General'
   ];
 
+<<<<<<< HEAD
   const getErrorMessage = (err, fallbackMessage) => {
     const status = err?.response?.status;
     const errorText = err?.response?.data?.error;
@@ -58,6 +59,8 @@ const UploadDocument = ({ onDraftGenerated }) => {
     return details || errorText || fallbackMessage;
   };
 
+=======
+>>>>>>> 66f77381e04af314442a171e9764063c060781d1
   const handleFileChange = (e) => {
     const selectedFile = e.target.files[0];
     if (selectedFile) {
@@ -92,7 +95,11 @@ const UploadDocument = ({ onDraftGenerated }) => {
       setStep(2);
       setSuccess(`Document analyzed successfully! Extracted ${response.data.extractedText.length} characters.`);
     } catch (err) {
+<<<<<<< HEAD
       setError(getErrorMessage(err, 'Failed to analyze document'));
+=======
+      setError(err.response?.data?.details || 'Failed to analyze document');
+>>>>>>> 66f77381e04af314442a171e9764063c060781d1
     } finally {
       setLoading(false);
     }
@@ -147,7 +154,11 @@ const UploadDocument = ({ onDraftGenerated }) => {
       setSpecificType('');
       setJurisdiction('Karnataka, India');
     } catch (err) {
+<<<<<<< HEAD
       setError(getErrorMessage(err, 'Failed to generate draft'));
+=======
+      setError(err.response?.data?.details || 'Failed to generate draft');
+>>>>>>> 66f77381e04af314442a171e9764063c060781d1
     } finally {
       setLoading(false);
     }

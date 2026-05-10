@@ -8,11 +8,16 @@
     "@testing-library/jest-dom": "^6.7.0",
     "@testing-library/react": "^16.3.0",
     "@testing-library/user-event": "^13.5.0",
+<<<<<<< HEAD
     "axios": "^1.15.0",
+=======
+    "axios": "^1.11.0",
+>>>>>>> 66f77381e04af314442a171e9764063c060781d1
     "docx": "^9.5.1",
     "file-saver": "^2.0.5",
     "html2canvas": "^1.4.1",
     "jspdf": "^3.0.1",
+<<<<<<< HEAD
     "lucide-react": "^1.8.0",
     "ogl": "^1.0.11",
     "react": "^19.1.1",
@@ -21,6 +26,14 @@
     "react-router-dom": "^7.14.1",
     "react-scripts": "5.0.1",
     "recharts": "^3.8.1",
+=======
+    "ogl": "^1.0.11",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1",
+    "react-router-dom": "^7.8.1",
+    "react-scripts": "5.0.1",
+    "recharts": "^3.7.0",
+>>>>>>> 66f77381e04af314442a171e9764063c060781d1
     "tailwindcss": "^3.4.3",
     "web-vitals": "^2.1.4"
   },

@@ -52,7 +52,6 @@ const HistoryPage = () => {
 
     fetchHistory();
   }, [filterAction, filterType, searchTerm, page]);
-
   const formatDate = (dateString) => sharedFormatDate(dateString, { time: true, short: true });
 
   const getActionIcon = (action) => {

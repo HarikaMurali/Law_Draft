@@ -3,7 +3,11 @@ const multer = require('multer');
 const path = require('path');
 const auth = require('../middleware/auth');
 const { parseDocument, cleanupFile, analyzeExtractedText, buildChunkedDraftContext } = require('../utils/documentParser');
+<<<<<<< HEAD
 const { generateContent, PRIMARY_MODEL, normalizeGeminiError } = require('../utils/gemini');
+=======
+const { generateContent, PRIMARY_MODEL } = require('../utils/gemini');
+>>>>>>> 66f77381e04af314442a171e9764063c060781d1
 const { formatCaseType, getSimplifiedCaseType } = require('../config/caseTypesConfig');
 const Activity = require('../models/Activity');
 const Draft = require('../models/Draft');
@@ -196,8 +200,12 @@ router.post('/generate-from-document', auth, async (req, res) => {
     // Validation
     if (!extractedText || typeof extractedText !== 'string' || extractedText.trim().length < 20) {
       return res.status(400).json({
+<<<<<<< HEAD
         error: 'Valid extracted text is required',
         details: 'Please provide extracted text with at least 20 characters.'
+=======
+        error: 'Valid extracted text is required (minimum 20 characters)'
+>>>>>>> 66f77381e04af314442a171e9764063c060781d1
       });
     }
 
@@ -214,16 +222,23 @@ router.post('/generate-from-document', auth, async (req, res) => {
         finalSimplifiedType = getSimplifiedCaseType(mainCategory);
       } else {
         return res.status(400).json({
+<<<<<<< HEAD
           error: 'Case type information is required',
           details: 'Provide caseType or all of mainCategory, subcategory, and specificType.'
+=======
+          error: 'Case type information is required'
+>>>>>>> 66f77381e04af314442a171e9764063c060781d1
         });
       }
     }
 
+<<<<<<< HEAD
     if (!finalSimplifiedType) {
       finalSimplifiedType = finalCaseType;
     }
 
+=======
+>>>>>>> 66f77381e04af314442a171e9764063c060781d1
     console.log(`📋 Generating draft from extracted document for case type: ${finalCaseType}`);
 
     try {
@@ -262,17 +277,32 @@ Make sure to incorporate specific details and facts from the extracted document.
       // Save the draft to database
       if (req.user?.userId) {
         try {
+<<<<<<< HEAD
           const titleDate = new Date().toISOString().split('T')[0];
           const safeTitleType = finalSimplifiedType || finalCaseType || 'Legal Draft';
           const draft = await Draft.create({
             userId: req.user.userId,
             title: `${safeTitleType} Draft - ${titleDate}`,
+=======
+          const draft = await Draft.create({
+            userId: req.user.userId,
+>>>>>>> 66f77381e04af314442a171e9764063c060781d1
             caseType: finalCaseType,
             mainCategory: storedMainCategory,
             subcategory: storedSubcategory,
             specificType: storedSpecificType,
+<<<<<<< HEAD
             details: documentAnalysis || extractedText.substring(0, 2000),
             draftText
+=======
+            jurisdiction: jurisdiction || 'Karnataka, India',
+            content: draftText,
+            metadata: {
+              generatedFromDocument: true,
+              documentBased: true,
+              timestamp: new Date().toISOString()
+            }
+>>>>>>> 66f77381e04af314442a171e9764063c060781d1
           });
 
           // Log activity
@@ -283,7 +313,11 @@ Make sure to incorporate specific details and facts from the extracted document.
             type: finalCaseType,
             details: `Generated AI-powered legal draft from uploaded document`,
             metadata: {
+<<<<<<< HEAD
               jurisdiction: jurisdiction || 'Karnataka, India',
+=======
+              jurisdiction,
+>>>>>>> 66f77381e04af314442a171e9764063c060781d1
               aiGenerated: true,
               draftId: draft._id,
               documentBased: true,
@@ -336,12 +370,19 @@ Make sure to incorporate specific details and facts from the extracted document.
       });
 
     } catch (aiError) {
+<<<<<<< HEAD
       const normalizedError = normalizeGeminiError(aiError);
       console.error('AI generation error:', normalizedError.message);
       res.status(normalizedError.statusCode || 500).json({
         error: 'Failed to generate draft from document',
         details: normalizedError.message,
         code: normalizedError.code
+=======
+      console.error('AI generation error:', aiError.message);
+      res.status(500).json({
+        error: 'Failed to generate draft from document',
+        details: aiError.message
+>>>>>>> 66f77381e04af314442a171e9764063c060781d1
       });
     }
 

@@ -1,7 +1,10 @@
 const fs = require('fs');
 const path = require('path');
 const { PDFParse } = require('pdf-parse');
+<<<<<<< HEAD
 const { generateContent, generateVisionContent } = require('./gemini');
+=======
+>>>>>>> 66f77381e04af314442a171e9764063c060781d1
 
 const CHUNK_SIZE = 9000;
 
@@ -42,6 +45,15 @@ async function extractTextFromPDF(filePath) {
  */
 async function extractTextFromImage(filePath) {
   try {
+<<<<<<< HEAD
+=======
+    const { GoogleGenerativeAI } = require('@google/generative-ai');
+    
+    if (!process.env.GOOGLE_AI_KEY) {
+      throw new Error('GOOGLE_AI_KEY environment variable is not set');
+    }
+
+>>>>>>> 66f77381e04af314442a171e9764063c060781d1
     const fileBuffer = fs.readFileSync(filePath);
     const base64Image = fileBuffer.toString('base64');
     
@@ -62,9 +74,18 @@ async function extractTextFromImage(filePath) {
 
   Do not invent missing text. If a word is unclear, mark it as [unclear].`;
 
+<<<<<<< HEAD
     // Call Gemini with multimodal payload
     console.log('📡 Calling Gemini Vision API...');
     const extractedText = await generateVisionContent([
+=======
+    // Call Gemini API with image
+    const genAI = new GoogleGenerativeAI(process.env.GOOGLE_AI_KEY);
+    const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
+    
+    console.log('📡 Calling Gemini Vision API...');
+    const result = await model.generateContent([
+>>>>>>> 66f77381e04af314442a171e9764063c060781d1
       {
         inlineData: {
           data: base64Image,
@@ -72,7 +93,14 @@ async function extractTextFromImage(filePath) {
         }
       },
       prompt
+<<<<<<< HEAD
     ], { model: 'gemini-2.0-flash' });
+=======
+    ]);
+
+    const response = await result.response;
+    const extractedText = response.text();
+>>>>>>> 66f77381e04af314442a171e9764063c060781d1
     
     console.log(`✅ Image text extracted successfully - ${extractedText.length} characters`);
     return extractedText;
@@ -110,6 +138,13 @@ async function analyzeExtractedText(extractedText, caseType = 'General', jurisdi
     throw new Error('No extracted text available for analysis');
   }
 
+<<<<<<< HEAD
+=======
+  const { GoogleGenerativeAI } = require('@google/generative-ai');
+  const genAI = new GoogleGenerativeAI(process.env.GOOGLE_AI_KEY);
+  const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+
+>>>>>>> 66f77381e04af314442a171e9764063c060781d1
   const prompt = `You are a legal document analyst. Analyze the extracted document text below and produce a concise but useful legal briefing.
 
 Document type requested: ${caseType}
@@ -128,7 +163,12 @@ Return the result with these sections:
 
 Be faithful to the text. Do not fabricate facts.`;
 
+<<<<<<< HEAD
   return generateContent(prompt);
+=======
+  const result = await model.generateContent(prompt);
+  return result.response.text();
+>>>>>>> 66f77381e04af314442a171e9764063c060781d1
 }
 
 async function buildChunkedDraftContext(extractedText) {
@@ -137,6 +177,13 @@ async function buildChunkedDraftContext(extractedText) {
   }
 
   const chunks = chunkText(extractedText);
+<<<<<<< HEAD
+=======
+  const { GoogleGenerativeAI } = require('@google/generative-ai');
+  const genAI = new GoogleGenerativeAI(process.env.GOOGLE_AI_KEY);
+  const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+
+>>>>>>> 66f77381e04af314442a171e9764063c060781d1
   const chunkSummaries = [];
   for (let index = 0; index < chunks.length; index += 1) {
     const chunk = chunks[index];
@@ -144,8 +191,13 @@ async function buildChunkedDraftContext(extractedText) {
 
 Chunk ${index + 1}:
 ${chunk}`;
+<<<<<<< HEAD
   const summary = await generateContent(prompt);
   chunkSummaries.push(`CHUNK ${index + 1}:\n${summary}`);
+=======
+    const result = await model.generateContent(prompt);
+    chunkSummaries.push(`CHUNK ${index + 1}:\n${result.response.text()}`);
+>>>>>>> 66f77381e04af314442a171e9764063c060781d1
   }
 
   return chunkSummaries.join('\n\n');
